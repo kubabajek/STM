@@ -32,7 +32,7 @@
 #include "stm32l4xx_hal.h"
 
   /**
-   * @fn display_begin with max brightness
+   * @fn display_begin
    * @brief Turn on the clock and display
    * @param hi2c I2C Handler to which display is connected
    * @device_number Device number in range 0-3 (uint8_t) which coressponds to device addresses 0xE0, 0xE2, 0xE4, 0xE6

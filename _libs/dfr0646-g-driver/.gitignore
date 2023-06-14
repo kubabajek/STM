@@ -1,0 +1,12 @@
+# Compilation files
+tests/build
+*.o
+*.out
+*.exe
+
+# Documentation
+docs/build
+
+# Editors
+*.geany
+.vscode

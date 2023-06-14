@@ -17,6 +17,7 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+//#include <dfr0646-g.h>
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -47,11 +48,6 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-const uint8_t ds1[] = { 0x28, 0x79, 0xde, 0x81, 0xe3, 0x0c, 0x3c, 0xc9 };
-const uint8_t ds2[] = { 0x28, 0x5d, 0xdd, 0x6b, 0xa1, 0x21, 0x01, 0xca };
-volatile float temp1, temp2;
-uint8_t TX_Buffer[50];
-uint8_t TX_Buffer_length;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,26 +93,48 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_Init();
-  MX_USART1_UART_Init();
   MX_I2C1_Init();
-  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-
-  HAL_TIM_Base_Start_IT(&htim6);
   display_begin(&hi2c1, 0);
-//  uint8_t address[8];
-//  ds18b20_read_address(address);
 
+  uint8_t clear_display[8] = {22,22,22,22,22,22,22,22};
+  uint8_t clear_dots[8] = {0,0,0,0,0,0,0,0};
+
+  double demo_values1[10] = {-1200.1, -454.5, -10.22, -1.34, 0.0, 6.555, 15.2, 84.6, 150.2, 854.1};
+  double demo_values2[10] = {-854.2, 666.0, -1.584, -8.34, 6.666, 118.5, 624.2, -125.2, -1.13, 98.5};
+	  
+  uint8_t demo_values[8] = {16,10,17,18,21,6,6,21};
+  uint8_t demo_dots[8] = {0,0,0,0,1,0,1,0};
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	TX_Buffer_length = snprintf(TX_Buffer, sizeof(TX_Buffer), "Temp1: %.2f, Temp2: %.2f\r\n",temp1,temp2);
-	HAL_UART_Transmit(&huart2, TX_Buffer, TX_Buffer_length,1000);
-	HAL_Delay(1500);
+	  //Display some values
+	  for (uint8_t i=0; i<10; ++i){
+		  display_print_two(&hi2c1, 0, demo_values1[i], demo_values2[i]);
+		  HAL_Delay(1500);
+	  }
+	  //clear the display
+	  display_print_seg_all(&hi2c1, 0, clear_dots, clear_display);
+	  HAL_Delay(200);
+
+	  //light up poles in sequence with dot only after even numbers
+	  for (uint8_t i=1; i<=8;++i){
+		  if (i%2 == 0)
+			  display_print_seg(&hi2c1, 0, i-1, 1, i);
+		  else
+			  display_print_seg(&hi2c1, 0, i-1, 0, i);
+		  HAL_Delay(1000);
+	  }
+
+	  //display HALO-.66.-
+	  display_print_seg_all(&hi2c1, 0, demo_dots, demo_values);
+	  HAL_Delay(5000);
+
+
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -372,15 +390,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-	if(htim -> Instance == TIM6){
-		display_print_two(&hi2c1, 0, (double)temp1, (double)temp2); //previous measurment
-		ds18b20_start_measure(ds2);
-		temp2 = ds18b20_get_temp(ds2);
-		ds18b20_start_measure(ds1);
-		temp1 = ds18b20_get_temp(ds1);
-	}
-}
 /* USER CODE END 4 */
 
 /**
